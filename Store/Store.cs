@@ -8,9 +8,11 @@ namespace Flow.Store
     public class Store : IStore, IDisposable
     {
         /// <summary>
-        /// Data store.
+        /// Data of the store.
         /// </summary>
-        public Dictionary<string, object> Data { get; private set; } = new Dictionary<string, object>();
+        public object Data { get; }
+
+        private readonly IStoreDefinition _storeDefinition;
 
         /// <summary>
         /// Store subscriber.
@@ -25,25 +27,26 @@ namespace Flow.Store
             _storeSubscriber = new StoreSubscriber();
         }
 
-        /// <summary>
-        /// Store constructor with nodes.
-        /// </summary>
-        /// <param name="nodes"></param>
-        public Store(IList<string> nodes)
+        public Store(IStoreDefinition storeDefinition)
         {
-            if (nodes is null)
+            if (storeDefinition is null)
             {
-                throw new Exception("No node definiton");
+                throw new Exception("The store definition is missing.");
             }
+
+            _storeDefinition = storeDefinition;
+
+            ICollection<string> nodes = _storeDefinition.GetNodes();
 
             _storeSubscriber = new StoreSubscriber(nodes);
             _storeSubscriber.HandleChangeNode += OnHandleChangeNode;
 
             foreach (string node in nodes)
             {
-                Data.Add(node, null);
                 _storeSubscriber.RegisterNode(node);
             }
+
+            Data = _storeDefinition.CreateDataInstance();
         }
 
         /// <summary>
@@ -90,7 +93,7 @@ namespace Flow.Store
         {
             lock (Data)
             {
-                Data[node] = data;
+                _storeDefinition.SetValue(Data, node, data);
             }
 
             _storeSubscriber.EmitNodeChange(node);
@@ -103,12 +106,7 @@ namespace Flow.Store
         /// <returns>Value of the node</returns>
         public object GetNodeValue(string node)
         {
-            if (!Data.ContainsKey(node))
-            {
-                throw new ArgumentException($"Node {node} does not exist");
-            }
-
-            return Data[node];
+            return _storeDefinition.GetValue(Data, node);
         }
 
         /// <summary>
