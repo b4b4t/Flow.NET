@@ -1,7 +1,7 @@
 ﻿using Flow.Subscription;
 using System.Collections.Generic;
 
-namespace Flow.Contracts
+namespace Flow.Store.Contracts
 {
     public interface IStore
     {

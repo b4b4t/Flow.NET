@@ -1,5 +1,5 @@
-﻿using Flow.Contracts;
-using Flow.Store;
+﻿using Flow.Store;
+using Flow.Store.Contracts;
 using Flow.Subscription;
 using Microsoft.AspNetCore.Components;
 using System;

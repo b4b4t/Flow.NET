@@ -1,4 +1,4 @@
-﻿using Flow.Contracts;
+﻿using Flow.Store.Contracts;
 using Flow.Subscription;
 using System;
 using System.Collections.Generic;

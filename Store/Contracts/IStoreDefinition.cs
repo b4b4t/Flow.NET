@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Flow.Store
+namespace Flow.Store.Contracts
 {
     public interface IStoreDefinition
     {
