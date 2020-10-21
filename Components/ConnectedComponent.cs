@@ -154,12 +154,10 @@ namespace Flow.Components
         /// <summary>
         /// Dispatch data.
         /// </summary>
-        /// <param name="identifier">Store identifier</param>
-        /// <param name="node">Node name</param>
-        /// <param name="data">Data</param>
-        protected void Dispatch(string identifier, string node, object data)
+        /// <param name="action">Action</param>
+        protected void Dispatch(IAction action)
         {
-            StoreContainer.Disptach(identifier, node, data);
+            StoreContainer.Disptach(action);
         }
 
         /// <summary>

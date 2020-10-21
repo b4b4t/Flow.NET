@@ -86,17 +86,20 @@ namespace Flow.Store
         /// <summary>
         /// Dispatch the data. 
         /// </summary>
-        /// <typeparam name="T">Data type</typeparam>
-        /// <param name="node">Node name</param>
-        /// <param name="data">Data</param>
-        public void Dispatch<T>(string node, T data)
+        /// <param name="action">Action</param>
+        public void Dispatch(IAction action)
         {
-            lock (Data)
+            if (action is null)
             {
-                _storeDefinition.SetValue(Data, node, data);
+                throw new ArgumentNullException(nameof(action));
             }
 
-            _storeSubscriber.EmitNodeChange(node);
+            lock (Data)
+            {
+                _storeDefinition.SetValue(Data, action.Node, action.Data);
+            }
+
+            _storeSubscriber.EmitNodeChange(action.Node);
         }
 
         /// <summary>

@@ -16,11 +16,11 @@ namespace Flow.Store
             ReadStores();
         }
 
-        public void Disptach(string identifier, string node, object data)
+        public void Disptach(IAction action)
         {
-            IStore store = GetStore(identifier);
+            IStore store = GetStore(action.Identifier);
 
-            store.Dispatch(node, data);
+            store.Dispatch(action);
         }
 
         public void ConnectToStores(ICollection<StoreSubscription> storeSubscriptions)
