@@ -9,9 +9,9 @@ namespace Flow.Store
     {
         public Dictionary<string, IStore> Stores { get; private set; } = new Dictionary<string, IStore>();
 
-        public void Register(string identifier, IStore store)
+        public void Register(IStore store)
         {
-            Stores.Add(identifier, store);
+            Stores.Add(store.Identifier, store);
 
             ReadStores();
         }

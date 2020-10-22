@@ -10,7 +10,8 @@ namespace Flow.Store
         /// <summary>
         /// Data of the store.
         /// </summary>
-        public object Data { get; }
+        public object Data { get; private set; }
+        public string Identifier { get; private set; }
 
         private readonly IStoreDefinition _storeDefinition;
 
@@ -22,20 +23,25 @@ namespace Flow.Store
         /// <summary>
         /// Default store constructor.
         /// </summary>
-        public Store()
+        public Store(string identifier, IStoreDefinition storeDefinition)
         {
-            _storeSubscriber = new StoreSubscriber();
-        }
-
-        public Store(IStoreDefinition storeDefinition)
-        {
-            if (storeDefinition is null)
+            if (string.IsNullOrEmpty(identifier))
             {
-                throw new Exception("The store definition is missing.");
+                throw new ArgumentException("An identifier is missing for the store");
             }
 
+            if (storeDefinition is null)
+            {
+                throw new ArgumentException("The store definition is missing.");
+            }
+
+            // Set store identifier
+            Identifier = identifier;
+
+            // Set store definition
             _storeDefinition = storeDefinition;
 
+            // Register all node subscriptions
             ICollection<string> nodes = _storeDefinition.GetNodes();
 
             _storeSubscriber = new StoreSubscriber(nodes);
@@ -46,6 +52,7 @@ namespace Flow.Store
                 _storeSubscriber.RegisterNode(node);
             }
 
+            // Init store data
             Data = _storeDefinition.CreateDataInstance();
         }
 
