@@ -145,10 +145,22 @@ namespace Flow.Components
                 Console.WriteLine($"Set node value : {data}");
                 property.SetValue(this, data);
 
+                OnNodeChanged(storeConnector.NodeName, property.Name);
+
                 StateHasChanged();
             };
 
             return handleChangeAction;
+        }
+
+        /// <summary>
+        /// Call when a node changed.
+        /// </summary>
+        /// <param name="nodeName">Node name</param>
+        /// <param name="propertyName">Node property name in the component</param>
+        protected virtual void OnNodeChanged(string nodeName, string propertyName)
+        {
+
         }
 
         /// <summary>
