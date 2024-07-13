@@ -1,18 +1,24 @@
 ﻿using Flow.Store.Contracts;
 
-namespace Flow.Store
-{
-    public class StoreAction : IAction
-    {
-        public StoreAction(string identifier, string node, object data)
-        {
-            Identifier = identifier;
-            Node = node;
-            Data = data;
-        }
+namespace Flow.Store;
 
-        public string Identifier { get; set; }
-        public string Node { get; set; }
-        public object Data { get; set; }
-    }
+/// <summary>
+/// Store action
+/// </summary>
+public class StoreAction(string identifier, string node, object data) : IAction
+{
+    /// <summary>
+    /// Store identifier
+    /// </summary>
+    public string Identifier { get; set; } = identifier;
+
+    /// <summary>
+    /// Node name
+    /// </summary>
+    public string Node { get; set; } = node;
+
+    /// <summary>
+    /// Data
+    /// </summary>
+    public object Data { get; set; } = data;
 }

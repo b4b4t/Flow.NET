@@ -1,9 +1,22 @@
-﻿namespace Flow.Store.Contracts
+﻿namespace Flow.Store.Contracts;
+
+/// <summary>
+/// Action
+/// </summary>
+public interface IAction
 {
-    public interface IAction
-    {
-        string Identifier { get; set; }
-        string Node { get; set; }
-        object Data { get; set; }
-    }
+    /// <summary>
+    /// Store identifier
+    /// </summary>
+    string Identifier { get; set; }
+
+    /// <summary>
+    /// Node name
+    /// </summary>
+    string Node { get; set; }
+
+    /// <summary>
+    /// Data
+    /// </summary>
+    object Data { get; set; }
 }

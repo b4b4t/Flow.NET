@@ -2,26 +2,27 @@
 using System;
 using System.Collections.Generic;
 
-namespace Flow.Extensions
+namespace Flow.Extensions;
+
+/// <summary>
+/// Subscription extensions
+/// </summary>
+public static class SubscriptionExtensions
 {
-    public static class SubscriptionExtensions
+    /// <summary>
+    /// Add node subscriptions into a store subscription.
+    /// </summary>
+    /// <param name="storeSubscription">Store subscription</param>
+    /// <param name="nodeSubscriptions">Node subscriptions</param>
+    /// <exception cref="ArgumentNullException">Error when one of the argument is null</exception>
+    public static void AddNodeSubscriptions(this StoreSubscription storeSubscription, ICollection<NodeSubscription> nodeSubscriptions)
     {
-        public static void AddNodeSubscriptions(this StoreSubscription storeSubscription, ICollection<NodeSubscription> nodeSubscriptions)
+        ArgumentNullException.ThrowIfNull(storeSubscription);
+        ArgumentNullException.ThrowIfNull(nodeSubscriptions);
+
+        foreach (var nodeSubscription in nodeSubscriptions)
         {
-            if (storeSubscription is null)
-            {
-                throw new ArgumentNullException(nameof(storeSubscription));
-            }
-
-            if (nodeSubscriptions is null)
-            {
-                throw new ArgumentNullException(nameof(nodeSubscriptions));
-            }
-
-            foreach (var nodeSubscription in nodeSubscriptions)
-            {
-                storeSubscription.AddNodeSubription(nodeSubscription);
-            }
+            storeSubscription.AddNodeSubription(nodeSubscription);
         }
     }
 }

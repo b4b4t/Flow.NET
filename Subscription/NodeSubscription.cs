@@ -1,16 +1,19 @@
 ﻿using System;
 
-namespace Flow.Subscription
-{
-    public class NodeSubscription
-    {
-        public NodeSubscription(string node, Action handleChange)
-        {
-            Node = node;
-            HandleChange = handleChange;
-        }
+namespace Flow.Subscription;
 
-        public string Node { get; private set; }
-        public Action HandleChange { get; private set; }
-    }
+/// <summary>
+/// Node subscription
+/// </summary>
+public class NodeSubscription(string node, Action handleChange)
+{
+    /// <summary>
+    /// Node
+    /// </summary>
+    public string Node { get; private set; } = node;
+    
+    /// <summary>
+    /// Handle change action
+    /// </summary>
+    public Action HandleChange { get; private set; } = handleChange;
 }
