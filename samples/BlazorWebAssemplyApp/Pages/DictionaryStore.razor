@@ -1,0 +1,30 @@
+﻿@page "/dictionary"
+
+@using Flow.Components
+@using Flow.Store
+@using Flow.Store.Contracts
+
+@inherits ConnectedComponent
+
+<PageTitle>Dictionary store example</PageTitle>
+
+<h1>Dictionary store example</h1>
+
+<p role="status">Current count: @CurrentCount</p>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+@code {
+    [StoreConnector("CounterStore", "CounterNode")]
+    public int CurrentCount { get; set; }
+
+    private void IncrementCount()
+    {
+        // Get the store from the container
+        IStore store = StoreContainer.GetStore("CounterStore");
+        // Create an action to update the node in the store
+        var action = new StoreAction("CounterStore", "CounterNode", CurrentCount + 1);
+        // Dispatch the action
+        store.Dispatch(action);
+    }
+}
