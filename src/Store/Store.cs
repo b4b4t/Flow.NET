@@ -31,6 +31,11 @@ public class Store : IStore, IDisposable
     private readonly StoreSubscriber _storeSubscriber;
 
     /// <summary>
+    /// Lock for the data
+    /// </summary>
+    private readonly object _dataLock = new();
+
+    /// <summary>
     /// Default store constructor.
     /// </summary>
     public Store(string identifier, IStoreDefinition storeDefinition)
@@ -108,7 +113,7 @@ public class Store : IStore, IDisposable
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        lock (Data)
+        lock (_dataLock)
         {
             _storeDefinition.SetValue(Data, action.Node, action.Data);
         }
@@ -139,10 +144,7 @@ public class Store : IStore, IDisposable
     /// <param name="node">Node name</param>
     protected virtual void OnHandleChangeNode(string node)
     {
-        Console.WriteLine($"OnHandleChangeNode : {node}");
-
         Action handleChangeAction = _storeSubscriber.GetNodeHandleChange(node);
-
         handleChangeAction?.DynamicInvoke();
     }
 }
