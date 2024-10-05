@@ -73,6 +73,6 @@ You can connect the properties with the following steps :
 #### Connect a blazor component property to a node in a store
 
 ```cs
-[StoreConnector("MyStoreNode")]
+[StoreConnector("MyStore", "MyStoreNode")]
 public MyClass MyProperty { get; set; }
 ```
