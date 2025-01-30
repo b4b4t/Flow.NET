@@ -4,6 +4,7 @@
     <PackageId>$(AssemblyName).NET</PackageId>
     <TargetFramework>net8.0</TargetFramework>
     <VersionPrefix>2.2.0</VersionPrefix>
+	<Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

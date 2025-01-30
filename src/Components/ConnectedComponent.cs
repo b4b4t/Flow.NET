@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Flow.Components;
 
@@ -14,21 +16,27 @@ namespace Flow.Components;
 /// </summary>
 public class ConnectedComponent : ComponentBase, IDisposable
 {
+    /// <summary>
+    /// Store container
+    /// </summary>
     [Inject]
-    protected StoreContainer StoreContainer { get; set; }
+    protected StoreContainer StoreContainer { get; set; } = null!;
 
+    /// <summary>
+    /// Logger
+    /// </summary>
     [Inject]
-    private ILogger<ConnectedComponent> Logger { get; set; }
+    protected ILogger<ConnectedComponent> Logger { get; set; } = null!;
 
     /// <summary>
     /// Component type
     /// </summary>
-    private Type _componentType;
+    private Type? _componentType;
 
     /// <summary>
     /// Store subscriptions
     /// </summary>
-    private ICollection<StoreSubscription> _storeSubscriptions;
+    private ICollection<StoreSubscription>? _storeSubscriptions;
 
     /// <inheritdoc />
     protected override void OnInitialized()
@@ -51,14 +59,14 @@ public class ConnectedComponent : ComponentBase, IDisposable
     private void ConnectNodesToStores()
     {
         // Get the component properties
-        PropertyInfo[] properties = _componentType.GetProperties();
+        PropertyInfo[] properties = _componentType?.GetProperties() ?? throw new InvalidOperationException("Cannot get the component type");
 
         // Add the node subscription for each property having a Store connector attribute
         Dictionary<string, StoreSubscription> storeSubscriptions = [];
 
         foreach (PropertyInfo propertyInfo in properties)
         {
-            StoreConnectorAttribute storeConnector = propertyInfo.GetCustomAttribute<StoreConnectorAttribute>();
+            StoreConnectorAttribute? storeConnector = propertyInfo.GetCustomAttribute<StoreConnectorAttribute>();
 
             if (storeConnector is not null)
             {
@@ -79,20 +87,34 @@ public class ConnectedComponent : ComponentBase, IDisposable
     /// </summary>
     protected virtual void SetPropertiesDataFromStores()
     {
-        PropertyInfo[] properties = _componentType.GetProperties();
+        PropertyInfo[] properties = _componentType?.GetProperties() ?? throw new InvalidOperationException("Cannot get the component type"); ;
 
         foreach (PropertyInfo propertyInfo in properties)
         {
-            StoreConnectorAttribute storeConnector = propertyInfo.GetCustomAttribute<StoreConnectorAttribute>();
+            StoreConnectorAttribute? storeConnector = propertyInfo.GetCustomAttribute<StoreConnectorAttribute>();
 
             if (storeConnector is not null)
             {
                 IStore store = StoreContainer.GetStore(storeConnector.Identifier);
-                object data = store.GetNodeValue(storeConnector.NodeName);
-
+                object? data;
+                if (store is IStoreManager storeManager)
+                {
+                    data = storeManager.GetNodeValue(storeConnector.NodeName);
+                }
+                else if (IsGenericStoreManager(store, out Type? storeManagerType))
+                {
+                    data = ExecuteGetNodeValue(storeManagerType!, store, storeConnector.NodeName);
+                }
+                else
+                {
+                    throw new InvalidOperationException(
+                        $"Store node (Store {storeConnector.Identifier} -> Node {storeConnector.NodeName}) cannot be fetched for the property {propertyInfo.Name}");
+                }
+                
                 propertyInfo.SetValue(this, data);
 
-                Logger.LogInformation("Store {Identifier} -> Node {NodeName} = {data}", storeConnector.Identifier, storeConnector.NodeName, data);
+                Logger.LogInformation("Fetched property {Name} : Store {Identifier} -> Node {NodeName}", 
+                    propertyInfo.Name, storeConnector.Identifier, storeConnector.NodeName);
             }
         }
     }
@@ -105,7 +127,7 @@ public class ConnectedComponent : ComponentBase, IDisposable
     /// <returns>Store susbcription</returns>
     private static StoreSubscription CreateOrGetStoreSubscription(Dictionary<string, StoreSubscription> storeSubscriptions, string identifier)
     {
-        if (storeSubscriptions.TryGetValue(identifier, out StoreSubscription value))
+        if (storeSubscriptions.TryGetValue(identifier, out StoreSubscription? value))
         {
             return value;
         }
@@ -136,9 +158,9 @@ public class ConnectedComponent : ComponentBase, IDisposable
 
         Logger.LogInformation("CreateNodeSubscription : {NodeName}", storeConnector.NodeName);
 
-        Action handleChangeAction = HandleChangeFactory(storeConnector, propertyInfo);
+        Func<Task> handleChangeFunc = HandleChangeFactory(storeConnector, propertyInfo);
 
-        return new NodeSubscription(storeConnector.NodeName, handleChangeAction);
+        return new NodeSubscription(storeConnector.NodeName, handleChangeFunc);
     }
 
     /// <summary>
@@ -147,27 +169,43 @@ public class ConnectedComponent : ComponentBase, IDisposable
     /// <param name="storeConnector">Store connector</param>
     /// <param name="property">Property info</param>
     /// <returns>Action</returns>
-    protected virtual Action HandleChangeFactory(StoreConnectorAttribute storeConnector, PropertyInfo property)
+    protected virtual Func<Task> HandleChangeFactory(StoreConnectorAttribute storeConnector, PropertyInfo property)
     {
         Logger.LogInformation("HandleChangeFactory : {Name}", property.Name);
 
-        void handleChangeAction()
+        async Task handleChangeActionAsync()
         {
             Logger.LogInformation("Component handle change : {NodeName}", storeConnector.NodeName);
 
             Type type = property.PropertyType;
             IStore store = StoreContainer.Stores[storeConnector.Identifier];
-            object data = Convert.ChangeType(store.GetNodeValue(storeConnector.NodeName), type);
+            object? data;
 
-            Logger.LogInformation("Set node value : {data}", data);
+            if (store is IStoreManager storeManager)
+            {
+                data = Convert.ChangeType(storeManager.GetNodeValue(storeConnector.NodeName), type);
+            }
+            else if (IsGenericStoreManager(store, out Type? storeManagerType))
+            {
+                data = ExecuteGetNodeValue(storeManagerType!, store, storeConnector.NodeName);
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    $"Property {property.Name} cannot be updated for store node (Store {storeConnector.Identifier} -> Node {storeConnector.NodeName})");
+            }
 
             property.SetValue(this, data);
 
+            Logger.LogInformation("Property {Name} updated with store node (Store {Identifier} -> Node {NodeName})",
+                        property.Name, storeConnector.Identifier, storeConnector.NodeName); ;
+
             OnNodeChanged(storeConnector.NodeName, property.Name);
-            StateHasChanged();
+
+            await InvokeAsync(StateHasChanged);
         }
 
-        return handleChangeAction;
+        return handleChangeActionAsync;
     }
 
     /// <summary>
@@ -177,7 +215,6 @@ public class ConnectedComponent : ComponentBase, IDisposable
     /// <param name="propertyName">Node property name in the component</param>
     protected virtual void OnNodeChanged(string nodeName, string propertyName)
     {
-
     }
 
     /// <summary>
@@ -191,7 +228,39 @@ public class ConnectedComponent : ComponentBase, IDisposable
     /// </summary>
     public void Dispose()
     {
-        StoreContainer.DisconnectToStores(_storeSubscriptions);
+        if (_storeSubscriptions is not null)
+        {
+            StoreContainer.DisconnectToStores(_storeSubscriptions);
+        }
         GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Check if the store is a generic store manager.
+    /// </summary>
+    /// <param name="store">Store</param>
+    /// <returns>True if the store is a generic store manager.</returns>
+    private static bool IsGenericStoreManager(IStore store, out Type? storeManagerType)
+    {
+        storeManagerType = store.GetType().GetInterfaces()
+                .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IStoreManager<>));
+
+        return storeManagerType is not null;
+    }
+
+    /// <summary>
+    /// Execute the GetNodeValue method of the generic store manager.
+    /// </summary>
+    /// <param name="storeManagerType">Store manager type</param>
+    /// <param name="store">Store</param>
+    /// <param name="node">Node name</param>
+    /// <returns></returns>
+    private static object? ExecuteGetNodeValue(Type storeManagerType, object store, string node)
+    {
+        // Get the method info for GetNodeValue
+        MethodInfo method = storeManagerType.GetMethod(nameof(IStoreManager<object>.GetNodeValue)) 
+            ?? throw new InvalidOperationException($"{nameof(IStoreManager<object>.GetNodeValue)} method not found.");
+
+        return method.Invoke(store, [node]);
     }
 }

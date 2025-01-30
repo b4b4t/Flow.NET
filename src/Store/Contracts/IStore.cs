@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Flow.Store.Contracts;
 
 /// <summary>
-/// Store
+/// Store base
 /// </summary>
 public interface IStore
 {
@@ -12,13 +12,6 @@ public interface IStore
     /// Store identifier
     /// </summary>
     string Identifier { get; }
-
-    /// <summary>
-    /// Get a node value
-    /// </summary>
-    /// <param name="node">Node name</param>
-    /// <returns>Node value</returns>
-    object GetNodeValue(string node);
 
     /// <summary>
     /// Connect the subscriptions to a store
@@ -31,10 +24,4 @@ public interface IStore
     /// </summary>
     /// <param name="nodeSubscriptions">Node subscriptions</param>
     void DisconnectToStore(ICollection<NodeSubscription> nodeSubscriptions);
-
-    /// <summary>
-    /// Dispatch an action
-    /// </summary>
-    /// <param name="action">Action</param>
-    void Dispatch(IAction action);
 }

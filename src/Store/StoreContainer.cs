@@ -39,9 +39,20 @@ public class StoreContainer(ILogger<StoreContainer> logger)
     /// <param name="action">Action</param>
     public void Disptach(IAction action)
     {
-        IStore store = GetStore(action.Identifier);
+        IStoreManager storeManager = GetStoreManager(action.Identifier);
 
-        store.Dispatch(action);
+        storeManager.Dispatch(action);
+    }
+
+    /// <summary>
+    /// Dispatch an action
+    /// </summary>
+    /// <param name="action">Action</param>
+    public void Disptach<TStore>(IAction<TStore> action)
+    {
+        IStoreManager<TStore> storeManager = GetStoreManager<TStore>(action.Identifier);
+
+        storeManager.Dispatch(action);
     }
 
     /// <summary>
@@ -85,12 +96,46 @@ public class StoreContainer(ILogger<StoreContainer> logger)
     /// <exception cref="ArgumentException">If </exception>
     public IStore GetStore(string identifier)
     {
-        if (!Stores.TryGetValue(identifier, out IStore value))
+        if (!Stores.TryGetValue(identifier, out IStore? value))
         {
             throw new MissingStoreException(identifier);
         }
 
         return value;
+    }    
+    
+    /// <summary>
+    /// Get a store manager from an identifier
+    /// </summary>
+    /// <param name="identifier">Store identifier</param>
+    /// <returns>Store manager</returns>
+    public IStoreManager GetStoreManager(string identifier)
+    {
+        IStore store = GetStore(identifier);
+
+        if (store is IStoreManager storeManager)
+        {
+            return storeManager;
+        }
+
+        throw new InvalidOperationException($"The store manager is not a {nameof(IStoreManager)}");
+    }    
+
+    /// <summary>
+    /// Get a store manager from an identifier
+    /// </summary>
+    /// <param name="identifier">Store identifier</param>
+    /// <returns>Store manager</returns>
+    public IStoreManager<TStore> GetStoreManager<TStore>(string identifier)
+    {
+        IStore store = GetStore(identifier);
+
+        if (store is IStoreManager<TStore> storeManager)
+        {
+            return storeManager;
+        }
+
+        throw new InvalidOperationException($"The store manager is not a {nameof(IStoreManager<TStore>)}");
     }
 
     /// <summary>

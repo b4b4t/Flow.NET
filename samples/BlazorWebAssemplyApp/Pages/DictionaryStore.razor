@@ -1,5 +1,6 @@
 ﻿@page "/dictionary"
 
+@using BlazorWebAssemplyApp.Stores
 @using Flow.Components
 @using Flow.Store
 @using Flow.Store.Contracts
@@ -10,21 +11,46 @@
 
 <h1>Dictionary store example</h1>
 
-<p role="status">Current count: @CurrentCount</p>
+<p role="status">Store count: @StoreCount</p>
 
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+<p>
+    <button class="btn btn-primary" @onclick="IncrementCount">Increment store counter</button>
+</p>
+
+<p role="status">Typed store count: @TypedStoreCount</p>
+
+<p>
+    <button class="btn btn-primary" @onclick="IncrementTypedCount">Increment typed store counter</button>
+</p>
 
 @code {
-    [StoreConnector("CounterStore", "CounterNode")]
-    public int CurrentCount { get; set; }
+    [StoreConnector("CounterStore", "StoreCounterNode")]
+    public int StoreCount { get; set; }    
+
+
+    [StoreConnector<TypedStore>("TypedCounterStore", "TypedStoreCounterNode")]
+    public int? TypedStoreCount { get; set; }
 
     private void IncrementCount()
     {
         // Get the store from the container
-        IStore store = StoreContainer.GetStore("CounterStore");
+        IStoreManager storeManager = StoreContainer.GetStoreManager("CounterStore");
+
         // Create an action to update the node in the store
-        var action = new StoreAction("CounterStore", "CounterNode", CurrentCount + 1);
+        IAction action = new StoreAction("CounterStore", "StoreCounterNode", StoreCount + 1);
         // Dispatch the action
-        store.Dispatch(action);
+        storeManager.Dispatch(action);
+    }
+    
+    private void IncrementTypedCount()
+    {
+        // Get the store from the container
+        IStoreManager<TypedStore> storeManager = StoreContainer.GetStoreManager<TypedStore>("TypedCounterStore");
+
+        // Create an action to update the node in the store
+        IAction<int> action = new StoreAction<int>("CounterStore", "TypedStoreCounterNode", StoreCount + 1);
+
+        // Dispatch the action
+        storeManager.Dispatch(action);
     }
 }

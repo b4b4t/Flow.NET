@@ -1,20 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading.Tasks;
 
 namespace Flow.Subscription;
 
+/// <summary>
+/// Store subscriber
+/// </summary>
 public class StoreSubscriber : IDisposable
 {
     /// <summary>
     /// Handle change node event.
     /// </summary>
-    public event Action<string> HandleChangeNode;
+    public event Func<string, Task> HandleChangeNode = null!;
 
     /// <summary>
     /// Handle change keys by node.
     /// </summary>
-    private Dictionary<string, object> _eventKeys = new ();
+    private Dictionary<string, object> _eventKeys = [];
 
     /// <summary>
     /// Handle change actions by Even key.
@@ -29,16 +33,14 @@ public class StoreSubscriber : IDisposable
     /// <summary>
     /// Default constructor
     /// </summary>
-    public StoreSubscriber() => _subscriptions = new();
+    public StoreSubscriber() => _subscriptions = [];
 
     /// <summary>
     /// Constructor with nodes
     /// </summary>
     /// <param name="nodes">Store nodes</param>
-    public StoreSubscriber(ICollection<string> nodes)
-    {
-        _subscriptions = new Dictionary<string, ICollection<NodeSubscription>>(nodes.Count);
-    }
+    public StoreSubscriber(ICollection<string> nodes) 
+        => _subscriptions = new Dictionary<string, ICollection<NodeSubscription>>(nodes.Count);
 
     /// <summary>
     /// Register a node
@@ -46,7 +48,7 @@ public class StoreSubscriber : IDisposable
     /// <param name="node">Node name</param>
     public void RegisterNode(string node)
     {
-        _subscriptions.Add(node, new List<NodeSubscription>());
+        _subscriptions.Add(node, []);
         _eventKeys.Add(node, new object());
     }
 
@@ -56,10 +58,7 @@ public class StoreSubscriber : IDisposable
     /// <param name="nodeSubscription">Node subscription</param>
     public void SubscribeToNode(NodeSubscription nodeSubscription)
     {
-        if (nodeSubscription is null)
-        {
-            throw new ArgumentNullException(nameof(nodeSubscription));
-        }
+        ArgumentNullException.ThrowIfNull(nodeSubscription);
 
         string node = nodeSubscription.Node;
 
@@ -82,10 +81,7 @@ public class StoreSubscriber : IDisposable
     /// <param name="nodeSubscription">Node subscription</param>
     public void UnsubscribeToNode(NodeSubscription nodeSubscription)
     {
-        if (nodeSubscription is null)
-        {
-            throw new ArgumentNullException(nameof(nodeSubscription));
-        }
+        ArgumentNullException.ThrowIfNull(nodeSubscription);
 
         string node = nodeSubscription.Node;
 
@@ -118,11 +114,11 @@ public class StoreSubscriber : IDisposable
     /// </summary>
     /// <param name="node">Node name</param>
     /// <returns></returns>
-    public Action GetNodeHandleChange(string node)
+    public Func<Task> GetNodeHandleChange(string node)
     {
         CheckNodeSubscription(node);
 
-        return (Action)_handleChangeActions[_eventKeys[node]];
+        return (Func<Task>)_handleChangeActions[_eventKeys[node]]!;
     }
 
     /// <summary>
@@ -138,7 +134,7 @@ public class StoreSubscriber : IDisposable
     {
         if (!_subscriptions.ContainsKey(node))
         {
-            throw new ArgumentException($"Node does not exist : {node}");
+            throw new ArgumentException($"Node does not exist", node);
         }
     }
 }

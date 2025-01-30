@@ -17,7 +17,7 @@ public class StoreSubscription(string identifier)
     /// <summary>
     /// Node subscriptions of the store
     /// </summary>
-    public ICollection<NodeSubscription> NodeSubscriptions { get; private set; } = new List<NodeSubscription>();
+    public ICollection<NodeSubscription> NodeSubscriptions { get; private set; } = [];
 
     /// <summary>
     /// Add a subscription to a node

@@ -19,7 +19,7 @@ public interface IStoreDefinition
     /// <param name="data">Store data</param>
     /// <param name="node">Node name</param>
     /// <returns>Node data object</returns>
-    object GetValue(object data, string node);
+    object? GetValue(object data, string node);
 
     /// <summary>
     /// Set the node value in the store data.
@@ -27,7 +27,41 @@ public interface IStoreDefinition
     /// <param name="data">Store data</param>
     /// <param name="node">Node name</param>
     /// <param name="value">Data object</param>
-    void SetValue(object data, string node, object value);
+    void SetValue(object data, string node, object? value);
+
+    /// <summary>
+    /// Get the node list of the store definition.
+    /// </summary>
+    /// <returns>Node list</returns>
+    ICollection<string> GetNodes();
+}
+
+/// <summary>
+/// Store definition
+/// </summary>
+public interface IStoreDefinition<TStore>
+{
+    /// <summary>
+    /// Creat an instance to store the data.
+    /// </summary>
+    /// <returns>Data object</returns>
+    TStore? CreateDataInstance();
+
+    /// <summary>
+    /// Get value of the node in the data.
+    /// </summary>
+    /// <param name="data">Store data</param>
+    /// <param name="node">Node name</param>
+    /// <returns>Node data object</returns>
+    TNode? GetValue<TNode>(TStore data, string node);
+
+    /// <summary>
+    /// Set the node value in the store data.
+    /// </summary>
+    /// <param name="data">Store data</param>
+    /// <param name="node">Node name</param>
+    /// <param name="value">Data object</param>
+    void SetValue<TNode>(TStore data, string node, TNode value);
 
     /// <summary>
     /// Get the node list of the store definition.

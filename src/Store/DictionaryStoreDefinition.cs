@@ -8,18 +8,18 @@ namespace Flow.Store;
 /// <summary>
 /// Default constructor.
 /// </summary>
-/// <param name="nodes"></param>
+/// <param name="nodes">Node list</param>
 public class DictionaryStoreDefinition(string[] nodes) : IStoreDefinition
 {
     /// <summary>
     /// Node list.
     /// </summary>
-    public string[] _nodes = nodes;
+    private string[] _nodes = nodes;
 
     /// <inheritdoc cref="IStoreDefinition.CreateDataInstance"/>
     public object CreateDataInstance()
     {
-        Dictionary<string, object> data = new (_nodes.Length);
+        Dictionary<string, object?> data = new (_nodes.Length);
 
         foreach (string node in _nodes)
         {
@@ -33,21 +33,23 @@ public class DictionaryStoreDefinition(string[] nodes) : IStoreDefinition
     public ICollection<string> GetNodes() => _nodes;
 
     /// <inheritdoc cref="IStoreDefinition.GetValue(object, string)"/>
-    public object GetValue(object data, string node)
+    public object? GetValue(object data, string node)
     {
         CheckNode(node);
 
-        var storeData = data as IDictionary<string, object>;
-
+        IDictionary<string, object?>? storeData = data as IDictionary<string, object?> 
+            ?? throw new InvalidOperationException("No store data found");
+        
         return storeData[node];
     }
 
-    /// <inheritdoc cref="IStoreDefinition.SetValue(object, string, object)"/>
-    public void SetValue(object data, string node, object value)
+    /// <inheritdoc cref="IStoreDefinition.SetValue(object, string, object?)"/>
+    public void SetValue(object data, string node, object? value)
     {
         CheckNode(node);
 
-        var storeData = data as IDictionary<string, object>;
+        IDictionary<string, object?>? storeData = data as IDictionary<string, object?>
+            ?? throw new InvalidOperationException("No store data found");
 
         storeData[node] = value;
     }

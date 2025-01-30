@@ -4,6 +4,7 @@ using BlazorWebAssemplyApp;
 using Flow.Extensions;
 using Flow.Store;
 using Flow.Store.Contracts;
+using BlazorWebAssemplyApp.Stores;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -15,7 +16,8 @@ services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvi
 List<IStore> stores =
 [
     // Dictionary store
-    new Store("CounterStore", new DictionaryStoreDefinition(["CounterNode"])),
+    new Store("CounterStore", new DictionaryStoreDefinition(["StoreCounterNode"])),
+    new Store<TypedStore>("TypedCounterStore"),
 ];
 services.AddFlow(stores);
 

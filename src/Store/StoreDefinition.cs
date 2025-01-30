@@ -38,15 +38,15 @@ public class StoreDefinition<T> : IStoreDefinition where T: class, new()
     public ICollection<string> GetNodes() => _nodeProperties.Keys;
 
     /// <inheritdoc cref="IStoreDefinition.GetValue(object, string)"/>
-    public object GetValue(object data, string node)
+    public object? GetValue(object data, string node)
     {
         CheckNode(node);
 
         return _nodeProperties[node].GetValue(data);
     }
 
-    /// <inheritdoc cref="IStoreDefinition.SetValue(object, string, object)"/>
-    public void SetValue(object data, string node, object value)
+    /// <inheritdoc cref="IStoreDefinition.SetValue(object, string, object?)"/>
+    public void SetValue(object data, string node, object? value)
     {
         CheckNode(node);
 
