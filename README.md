@@ -15,10 +15,10 @@ Each store implements the `IStore` interface that allows to dispatch an action o
 
 Package manager : 
 
-`NuGet\Install-Package Flow.NET -Version 2.1.0`
+`NuGet\Install-Package Flow.NET -Version 3.0.0`
 
 .NET CLI :
-`dotnet add package Flow.NET --version 2.1.0`
+`dotnet add package Flow.NET --version 3.0.0`
 
 ### Declare the stores 
 
@@ -34,6 +34,7 @@ Example :
 List<IStore> stores = new()
 {
     new Store("MyStoreIdentifier", new DictionaryStoreDefinition(new string[] { "MyStoreNode" })),
+    new Store<TypedStore>("MyTypedStoreIdentifier")
 };
 services.AddFlow(stores);
 ```
@@ -47,16 +48,35 @@ For the moment, the `StoreAction` is the default implementation of the `IAction`
 Example :
 
 ```cs
-IStore store = storeContainer.GetStore("MyStoreIdentifier");
-var action = new StoreAction("MyStoreIdentifier", "MyStoreNode", valueObject);
-store.Dispatch(action);
+IStoreManager storeManager = storeContainer.GetStoreManager("MyStoreIdentifier");
+IAction action = new StoreAction("MyStoreIdentifier", "MyStoreNode", valueObject);
+
+// Dispatch the action
+await storeManager.DispatchAsync(action);
+```
+
+or (for typed stores)
+
+```cs
+IStoreManager<TypedStore> storeManager = StoreContainer.GetStoreManager<TypedStore>("MyTypedStoreIdentifier");
+IAction<int> action = new StoreAction<MyClass>("MyTypedStoreIdentifier", "MyTypedStoreNode", valueObject);
+
+// Dispatch the action
+await storeManager.DispatchAsync(action);
 ```
 
 ### Get a node value
 
 ```cs
-IStore store = storeContainer.GetStore("MyStoreIdentifier");
-store.GetNodeValue("MyStoreNode") as MyClass;
+IStoreManager storeManager = storeContainer.GetStoreManager("MyStoreIdentifier");
+storeManager.GetNodeValue("MyStoreNode") as MyClass;
+```
+
+or (for typed stores)
+
+```cs
+IStoreManager<TypedStore> storeManager = StoreContainer.GetStoreManager<TypedStore>("MyTypedStoreIdentifier");
+storeManager.GetNodeValue<MyClass>("MyTypedStoreNode");
 ```
 
 ### Update the properties that are connected to the store node
