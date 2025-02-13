@@ -103,7 +103,7 @@ public class ConnectedComponent : ComponentBase, IDisposable
                 }
                 else if (IsGenericStoreManager(store, out Type? storeManagerType))
                 {
-                    data = ExecuteGetNodeValue(storeManagerType!, store, storeConnector.NodeName);
+                    data = ExecuteGetNodeValue(storeManagerType!, propertyInfo.PropertyType, store, storeConnector.NodeName);
                 }
                 else
                 {
@@ -113,7 +113,7 @@ public class ConnectedComponent : ComponentBase, IDisposable
                 
                 propertyInfo.SetValue(this, data);
 
-                Logger.LogInformation("Fetched property {Name} : Store {Identifier} -> Node {NodeName}", 
+                Logger.LogDebug("Fetched property {Name} : Store {Identifier} -> Node {NodeName}", 
                     propertyInfo.Name, storeConnector.Identifier, storeConnector.NodeName);
             }
         }
@@ -156,7 +156,7 @@ public class ConnectedComponent : ComponentBase, IDisposable
             throw new Exception($"Can't find the store : {storeName}");
         }
 
-        Logger.LogInformation("CreateNodeSubscription : {NodeName}", storeConnector.NodeName);
+        Logger.LogDebug("CreateNodeSubscription : {NodeName} -> Property : {PropertyName}", storeConnector.NodeName, propertyInfo.Name);
 
         Func<Task> handleChangeFunc = HandleChangeFactory(storeConnector, propertyInfo);
 
@@ -171,12 +171,10 @@ public class ConnectedComponent : ComponentBase, IDisposable
     /// <returns>Action</returns>
     protected virtual Func<Task> HandleChangeFactory(StoreConnectorAttribute storeConnector, PropertyInfo property)
     {
-        Logger.LogInformation("HandleChangeFactory : {Name}", property.Name);
+        Logger.LogDebug("HandleChangeFactory : {Name} -> Property : {PropertyName}", property.Name, property.Name);
 
         async Task handleChangeActionAsync()
         {
-            Logger.LogInformation("Component handle change : {NodeName}", storeConnector.NodeName);
-
             Type type = property.PropertyType;
             IStore store = StoreContainer.Stores[storeConnector.Identifier];
             object? data;
@@ -187,7 +185,7 @@ public class ConnectedComponent : ComponentBase, IDisposable
             }
             else if (IsGenericStoreManager(store, out Type? storeManagerType))
             {
-                data = ExecuteGetNodeValue(storeManagerType!, store, storeConnector.NodeName);
+                data = ExecuteGetNodeValue(storeManagerType!, type, store, storeConnector.NodeName);
             }
             else
             {
@@ -198,7 +196,7 @@ public class ConnectedComponent : ComponentBase, IDisposable
             property.SetValue(this, data);
 
             Logger.LogInformation("Property {Name} updated with store node (Store {Identifier} -> Node {NodeName})",
-                        property.Name, storeConnector.Identifier, storeConnector.NodeName); ;
+                        property.Name, storeConnector.Identifier, storeConnector.NodeName);
 
             OnNodeChanged(storeConnector.NodeName, property.Name);
 
@@ -221,7 +219,7 @@ public class ConnectedComponent : ComponentBase, IDisposable
     /// Dispatch data.
     /// </summary>
     /// <param name="action">Action</param>
-    protected void Dispatch(IAction action) => StoreContainer.Disptach(action);
+    protected async Task DispatchAsync(IAction action) => await StoreContainer.DispatchAsync(action);
 
     /// <summary>
     /// Dispose
@@ -242,10 +240,19 @@ public class ConnectedComponent : ComponentBase, IDisposable
     /// <returns>True if the store is a generic store manager.</returns>
     private static bool IsGenericStoreManager(IStore store, out Type? storeManagerType)
     {
-        storeManagerType = store.GetType().GetInterfaces()
-                .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IStoreManager<>));
+        Type storeType = store.GetType();
 
-        return storeManagerType is not null;
+        if (storeType.GetInterfaces()
+                .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IStoreManager<>)))
+        {
+            storeManagerType = storeType;
+            return true;
+        }
+        else
+        {
+            storeManagerType = null;
+            return false;
+        }
     }
 
     /// <summary>
@@ -255,10 +262,10 @@ public class ConnectedComponent : ComponentBase, IDisposable
     /// <param name="store">Store</param>
     /// <param name="node">Node name</param>
     /// <returns></returns>
-    private static object? ExecuteGetNodeValue(Type storeManagerType, object store, string node)
+    private static object? ExecuteGetNodeValue(Type storeManagerType, Type nodeType, object store, string node)
     {
         // Get the method info for GetNodeValue
-        MethodInfo method = storeManagerType.GetMethod(nameof(IStoreManager<object>.GetNodeValue)) 
+        MethodInfo method = storeManagerType.GetMethod(nameof(IStoreManager<object>.GetNodeValue))?.MakeGenericMethod(nodeType)
             ?? throw new InvalidOperationException($"{nameof(IStoreManager<object>.GetNodeValue)} method not found.");
 
         return method.Invoke(store, [node]);

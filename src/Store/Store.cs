@@ -110,7 +110,7 @@ public class Store : IStore, IStoreManager, IDisposable
     /// Dispatch the data. 
     /// </summary>
     /// <param name="action">Action</param>
-    public void Dispatch(IAction action)
+    public async Task DispatchAsync(IAction action)
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -119,7 +119,7 @@ public class Store : IStore, IStoreManager, IDisposable
             _storeDefinition.SetValue(Data, action.Node, action.Data);
         }
 
-        _storeSubscriber.EmitNodeChange(action.Node);
+        await _storeSubscriber.EmitNodeChangeAsync(action.Node);
     }
 
     /// <summary>
@@ -154,7 +154,7 @@ public class Store : IStore, IStoreManager, IDisposable
 /// <summary>
 /// Store
 /// </summary>
-public class Store<TStore> : IStore, IStoreManager<TStore>, IDisposable
+public class Store<TStore> : IStore, IStoreManager<TStore>, IDisposable where TStore : new()
 {
     /// <summary>
     /// Data of the store.
@@ -222,7 +222,8 @@ public class Store<TStore> : IStore, IStoreManager<TStore>, IDisposable
         }
 
         // Init store data
-        Data = _storeDefinition.CreateDataInstance();
+        Data = _storeDefinition.CreateDataInstance() 
+            ?? throw new InvalidOperationException("Store must be instanciated");
     }
 
     /// <summary>
@@ -263,7 +264,7 @@ public class Store<TStore> : IStore, IStoreManager<TStore>, IDisposable
     /// Dispatch the data. 
     /// </summary>
     /// <param name="action">Action</param>
-    public void Dispatch<TNode>(IAction<TNode> action)
+    public async Task DispatchAsync<TNode>(IAction<TNode> action)
     {
         ArgumentNullException.ThrowIfNull(action);
 
@@ -272,7 +273,7 @@ public class Store<TStore> : IStore, IStoreManager<TStore>, IDisposable
             _storeDefinition.SetValue(Data, action.Node, action.Data);
         }
 
-        _storeSubscriber.EmitNodeChange(action.Node);
+        await _storeSubscriber.EmitNodeChangeAsync(action.Node);
     }
 
     /// <summary>
@@ -298,7 +299,7 @@ public class Store<TStore> : IStore, IStoreManager<TStore>, IDisposable
     /// <param name="node">Node name</param>
     protected virtual async Task OnHandleChangeNode(string node)
     {
-        Func<Task> handleChangeAction = _storeSubscriber.GetNodeHandleChange(node);
-        handleChangeAction?.DynamicInvoke();
+        Func<Task> handleChangeFunc = _storeSubscriber.GetNodeHandleChange(node);
+        await handleChangeFunc();
     }
 }

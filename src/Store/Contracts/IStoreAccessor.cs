@@ -1,4 +1,6 @@
-﻿namespace Flow.Store.Contracts;
+﻿using System.Threading.Tasks;
+
+namespace Flow.Store.Contracts;
 
 /// <summary>
 /// Store
@@ -16,7 +18,7 @@ public interface IStoreManager
     /// Dispatch an action
     /// </summary>
     /// <param name="action">Action</param>
-    void Dispatch(IAction action);
+    Task DispatchAsync(IAction action);
 }
 
 /// <summary>
@@ -35,5 +37,5 @@ public interface IStoreManager<TStore>
     /// Dispatch an action
     /// </summary>
     /// <param name="action">Action</param>
-    void Dispatch<TNode>(IAction<TNode> action);
+    Task DispatchAsync<TNode>(IAction<TNode> action);
 }

@@ -102,11 +102,11 @@ public class StoreSubscriber : IDisposable
     /// Emit a node change.
     /// </summary>
     /// <param name="node">Node name</param>
-    public void EmitNodeChange(string node)
+    public async Task EmitNodeChangeAsync(string node)
     {
         CheckNodeSubscription(node);
 
-        HandleChangeNode(node);
+        await HandleChangeNode(node);
     }
 
     /// <summary>

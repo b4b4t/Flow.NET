@@ -4,6 +4,7 @@ using Flow.Subscription;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Flow.Store;
 
@@ -37,22 +38,22 @@ public class StoreContainer(ILogger<StoreContainer> logger)
     /// Dispatch an action
     /// </summary>
     /// <param name="action">Action</param>
-    public void Disptach(IAction action)
+    public async Task DispatchAsync(IAction action)
     {
         IStoreManager storeManager = GetStoreManager(action.Identifier);
 
-        storeManager.Dispatch(action);
+        await storeManager.DispatchAsync(action);
     }
 
     /// <summary>
     /// Dispatch an action
     /// </summary>
     /// <param name="action">Action</param>
-    public void Disptach<TStore>(IAction<TStore> action)
+    public async Task DispatchAsync<TStore>(IAction<TStore> action)
     {
         IStoreManager<TStore> storeManager = GetStoreManager<TStore>(action.Identifier);
 
-        storeManager.Dispatch(action);
+        await storeManager.DispatchAsync(action);
     }
 
     /// <summary>
@@ -141,11 +142,6 @@ public class StoreContainer(ILogger<StoreContainer> logger)
     /// <summary>
     /// Read the stores identifiers
     /// </summary>
-    private void ReadStores()
-    {
-        foreach(string identifier in Stores.Keys)
-        {
-            _logger.LogInformation("Store : {identifier}", identifier);
-        }
-    }
+    private void ReadStores() 
+        => _logger.LogInformation("Stores : {identifier}", string.Join(", ", Stores.Keys));
 }

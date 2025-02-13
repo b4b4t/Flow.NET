@@ -12,7 +12,7 @@ namespace Flow.Store;
 /// </summary>
 /// <typeparam name="TStore">Store type</typeparam>
 /// <param name="store">Store value</param>
-public class TypedStoreDefinition<TStore> : IStoreDefinition<TStore>
+public class TypedStoreDefinition<TStore> : IStoreDefinition<TStore> where TStore : new()
 {
     /// <summary>
     /// Node list.
@@ -61,7 +61,7 @@ public class TypedStoreDefinition<TStore> : IStoreDefinition<TStore>
     }
 
     /// <inheritdoc />
-    public TStore? CreateDataInstance() => default;
+    public TStore? CreateDataInstance() => new();
 
     /// <inheritdoc />
     public ICollection<string> GetNodes() => _nodes;
@@ -99,7 +99,9 @@ public class TypedStoreDefinition<TStore> : IStoreDefinition<TStore>
                     $"Setter for '{node}' is not of type Func<{typeof(TStore).Name}, {typeof(TNode).Name}> (Found type : {setter.GetType().Name}).");
             }
         }
-
-        throw new InvalidOperationException($"{node} setter not found for {typeof(TStore).Name}");
+        else
+        {
+            throw new InvalidOperationException($"{node} setter not found for {typeof(TStore).Name}");
+        }
     }
 }
