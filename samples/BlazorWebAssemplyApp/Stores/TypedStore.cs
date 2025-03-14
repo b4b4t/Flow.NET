@@ -7,5 +7,5 @@ public class TypedStore
     /// <summary>
     /// Typed store counter
     /// </summary>
-    public int TypedStoreCounterNode { get; set; }
+    public int TypedStoreCounterNode { get; private set; }
 }

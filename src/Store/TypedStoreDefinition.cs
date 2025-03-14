@@ -1,4 +1,5 @@
-﻿using Flow.Store.Contracts;
+﻿using Flow.Exceptions;
+using Flow.Store.Contracts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -48,6 +49,16 @@ public class TypedStoreDefinition<TStore> : IStoreDefinition<TStore> where TStor
             _propertyGetters.Add(property.Name, getter);
 
             // Setter
+            // Check if the setter is non public
+            MethodInfo? setMethod = property.GetSetMethod(true) ?? throw new InvalidPropertyException(typeof(TStore).Name, property.Name, false);
+            bool isInitOnly = setMethod.ReturnParameter?.GetRequiredCustomModifiers()
+                              .Contains(typeof(System.Runtime.CompilerServices.IsExternalInit)) ?? false;
+
+            if (!setMethod.IsPrivate && !isInitOnly)
+            {
+                throw new InvalidPropertyException(typeof(TStore).Name, property.Name, setMethod.IsPublic);
+            }
+
             var valueParameter = Expression.Parameter(property.PropertyType, "value");
             var setter = Expression.Lambda(
                 typeof(Action<,>).MakeGenericType(typeof(TStore), property.PropertyType),
