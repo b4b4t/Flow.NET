@@ -31,11 +31,13 @@ Any store can be added if they implement the `IStore` interface. In these stores
 Example :
 
 ```cs
+// Create the store used by the application
 List<IStore> stores = new()
 {
-    new Store("MyStoreIdentifier", new DictionaryStoreDefinition(new string[] { "MyStoreNode" })),
-    new Store<TypedStore>("MyTypedStoreIdentifier")
+    new Store("MyStoreIdentifier", new DictionaryStoreDefinition(new string[] { "MyStoreNode" })), // Create a store with the DictionaryStoreDefinition class
+    new Store<TypedStore>("MyTypedStoreIdentifier") // Constructor to create a store with the TypedStoreDefinition class
 };
+// Register the stores and the services
 services.AddFlow(stores);
 ```
 
@@ -55,7 +57,7 @@ IAction action = new StoreAction("MyStoreIdentifier", "MyStoreNode", valueObject
 await storeManager.DispatchAsync(action);
 ```
 
-or (for typed stores)
+or for typed stores (store registered with the TypedStoreDefinition class)
 
 ```cs
 IStoreManager<TypedStore> storeManager = StoreContainer.GetStoreManager<TypedStore>("MyTypedStoreIdentifier");
@@ -72,7 +74,7 @@ IStoreManager storeManager = storeContainer.GetStoreManager("MyStoreIdentifier")
 storeManager.GetNodeValue("MyStoreNode") as MyClass;
 ```
 
-or (for typed stores)
+or for typed stores (store registered with the TypedStoreDefinition class)
 
 ```cs
 IStoreManager<TypedStore> storeManager = StoreContainer.GetStoreManager<TypedStore>("MyTypedStoreIdentifier");
