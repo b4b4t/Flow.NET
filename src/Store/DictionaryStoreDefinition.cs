@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Flow.Store;
 
@@ -19,11 +20,11 @@ public class DictionaryStoreDefinition(string[] nodes) : IStoreDefinition
     /// <inheritdoc cref="IStoreDefinition.CreateDataInstance"/>
     public object CreateDataInstance()
     {
-        Dictionary<string, object?> data = new (_nodes.Length);
+        Dictionary<string, IStoreNode<object?>> data = new (_nodes.Length);
 
         foreach (string node in _nodes)
         {
-            data.Add(node, null);
+            data.Add(node, new StoreNode<object?>());
         }
 
         return data;
@@ -37,21 +38,21 @@ public class DictionaryStoreDefinition(string[] nodes) : IStoreDefinition
     {
         CheckNode(node);
 
-        IDictionary<string, object?>? storeData = data as IDictionary<string, object?> 
+        IDictionary<string, IStoreNode<object?>>? storeData = data as IDictionary<string, IStoreNode<object?>> 
             ?? throw new InvalidOperationException("No store data found");
         
-        return storeData[node];
+        return storeData[node].Value;
     }
 
-    /// <inheritdoc cref="IStoreDefinition.SetValue(object, string, object?)"/>
-    public void SetValue(object data, string node, object? value)
+    /// <inheritdoc cref="IStoreDefinition.SetValueAsync(object, string, Func{object?, Task{object?}})"/>
+    public async Task SetValueAsync(object data, string node, Func<object?, Task<object?>> loader)
     {
         CheckNode(node);
 
-        IDictionary<string, object?>? storeData = data as IDictionary<string, object?>
+        IDictionary<string, IStoreNode<object?>>? storeData = data as IDictionary<string, IStoreNode<object?>>
             ?? throw new InvalidOperationException("No store data found");
 
-        storeData[node] = value;
+        await storeData[node].LoadAsync(loader);
     }
 
     /// <summary>

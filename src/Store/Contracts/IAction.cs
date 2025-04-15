@@ -1,43 +1,30 @@
-﻿namespace Flow.Store.Contracts;
+﻿using System.Threading.Tasks;
+using System;
+
+namespace Flow.Store.Contracts;
 
 /// <summary>
-/// Action
+/// Action interface
 /// </summary>
-public interface IAction
-{
-    /// <summary>
-    /// Store identifier
-    /// </summary>
-    string Identifier { get; set; }
-
-    /// <summary>
-    /// Node name
-    /// </summary>
-    string Node { get; set; }
-
-    /// <summary>
-    /// Data
-    /// </summary>
-    object Data { get; set; }
-}
+public interface IAction : IAction<object>;
 
 /// <summary>
-/// Action
+/// Action base interface
 /// </summary>
 public interface IAction<TNode>
 {
     /// <summary>
     /// Store identifier
     /// </summary>
-    string Identifier { get; set; }
+    string Identifier { get; init; }
 
     /// <summary>
     /// Node name
     /// </summary>
-    string Node { get; set; }
+    string Node { get; init; }
 
     /// <summary>
-    /// Data
+    /// Loader to 
     /// </summary>
-    TNode Data { get; set; }
+    Func<TNode?, Task<TNode?>> Loader { get; init; }
 }

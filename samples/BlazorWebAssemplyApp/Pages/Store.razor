@@ -1,0 +1,81 @@
+﻿@page "/store"
+
+@using BlazorWebAssemplyApp.Stores
+@using Flow.Components
+@using Flow.Store
+@using Flow.Store.Contracts
+
+@inherits ConnectedComponent
+
+<PageTitle>Store examples</PageTitle>
+
+<h1>Store examples</h1>
+
+<h2>Dictionary store example (DictionaryStoreDefinition)</h2>
+
+<p role="status">Store count: @StoreCount</p>
+
+<p>
+    <button class="btn btn-primary" @onclick="@IncrementCountAsync">Increment store counter</button>
+</p>
+
+<h2>Typed store example (TypedStoreDefinition)</h2>
+
+<p role="status">Typed store count: @TypedStoreCount</p>
+
+<p>
+    <button class="btn btn-primary" @onclick="@IncrementTypedCountAsync">Increment typed store counter</button>
+</p>
+
+<p role="status">Store node count: @StoreNodeStoreCount</p>
+
+<p>
+    <button class="btn btn-primary" @onclick="@IncrementStoreNodeCountAsync">Increment store node counter</button>
+</p>
+
+@code {
+    [StoreConnector("CounterStore", "StoreCounterNode")]
+    public int StoreCount { get; set; }    
+
+    [StoreConnector("TypedCounterStore", "TypedStoreCounterNode")]
+    public int TypedStoreCount { get; set; }
+    
+    [StoreConnector("TypedCounterStore", "StoreNodeCounterNode")]
+    public int StoreNodeStoreCount { get; set; }
+
+    private async Task IncrementCountAsync()
+    {
+        // Get the store from the container
+        IStoreManager storeManager = StoreContainer.GetStoreManager("CounterStore");
+
+        // Create an action to update the node in the store
+        IAction action = new StoreAction("CounterStore", "StoreCounterNode", StoreCount + 1);
+
+        // Dispatch the action
+        await storeManager.DispatchAsync(action);
+    }
+    
+    private async Task IncrementTypedCountAsync()
+    {
+        // Get the store from the container
+        IStoreManager<TypedStore> storeManager = StoreContainer.GetStoreManager<TypedStore>("TypedCounterStore");
+
+        // Create an action to update the node in the store
+        IAction<int> action = new StoreAction<int>("TypedCounterStore", nameof(TypedStore.TypedStoreCounterNode), TypedStoreCount + 1);
+
+        // Dispatch the action
+        await storeManager.DispatchAsync(action);
+    }    
+
+    private async Task IncrementStoreNodeCountAsync()
+    {
+        // Get the store from the container
+        IStoreManager<TypedStore> storeManager = StoreContainer.GetStoreManager<TypedStore>("TypedCounterStore");
+
+        // Create an action to update the node in the store
+        IAction<int> action = new StoreAction<int>("TypedCounterStore", nameof(TypedStore.StoreNodeCounterNode), StoreNodeStoreCount + 1);
+
+        // Dispatch the action
+        await storeManager.DispatchAsync(action);
+    }
+}

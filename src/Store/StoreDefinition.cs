@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Flow.Store;
 
@@ -45,12 +46,15 @@ public class StoreDefinition<T> : IStoreDefinition where T: class, new()
         return _nodeProperties[node].GetValue(data);
     }
 
-    /// <inheritdoc cref="IStoreDefinition.SetValue(object, string, object?)"/>
-    public void SetValue(object data, string node, object? value)
+    /// <inheritdoc cref="IStoreDefinition.SetValueAsync(object, string, Func{object?, Task{object?}})"/>
+    public async Task SetValueAsync(object data, string node, Func<object?, Task<object?>> loader)
     {
         CheckNode(node);
 
-        _nodeProperties[node].SetValue(data, value);
+        PropertyInfo property = _nodeProperties[node];
+        object? value = await loader(property.GetValue(data));
+
+        property.SetValue(data, value);
     }
 
     /// <summary>

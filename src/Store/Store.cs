@@ -2,6 +2,7 @@
 using Flow.Subscription;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Flow.Store;
@@ -34,7 +35,7 @@ public class Store : IStore, IStoreManager, IDisposable
     /// <summary>
     /// Lock for the data
     /// </summary>
-    private readonly object _dataLock = new();
+    private readonly SemaphoreSlim _dataLock = new(1, 1);
 
     /// <summary>
     /// Default store constructor.
@@ -114,9 +115,15 @@ public class Store : IStore, IStoreManager, IDisposable
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        lock (_dataLock)
+        await _dataLock.WaitAsync();
+
+        try
         {
-            _storeDefinition.SetValue(Data, action.Node, action.Data);
+            await _storeDefinition.SetValueAsync(Data, action.Node, action.Loader);
+        }
+        finally
+        {
+            _dataLock.Release();
         }
 
         await _storeSubscriber.EmitNodeChangeAsync(action.Node);
@@ -179,7 +186,7 @@ public class Store<TStore> : IStore, IStoreManager<TStore>, IDisposable where TS
     /// <summary>
     /// Lock for the data
     /// </summary>
-    private readonly object _dataLock = new();
+    private readonly SemaphoreSlim _dataLock = new(1, 1);
 
     /// <summary>
     /// Store constructor for TypedStoreDefinition
@@ -268,9 +275,15 @@ public class Store<TStore> : IStore, IStoreManager<TStore>, IDisposable where TS
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        lock (_dataLock)
+        await _dataLock.WaitAsync();
+
+        try
         {
-            _storeDefinition.SetValue(Data, action.Node, action.Data);
+            await _storeDefinition.SetValueAsync(Data, action.Node, action.Loader);
+        }
+        finally
+        {
+            _dataLock.Release();
         }
 
         await _storeSubscriber.EmitNodeChangeAsync(action.Node);
