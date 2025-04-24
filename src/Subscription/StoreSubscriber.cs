@@ -114,11 +114,11 @@ public class StoreSubscriber : IDisposable
     /// </summary>
     /// <param name="node">Node name</param>
     /// <returns></returns>
-    public Func<Task> GetNodeHandleChange(string node)
+    public Func<Task>? GetNodeHandleChange(string node)
     {
         CheckNodeSubscription(node);
 
-        return (Func<Task>)_handleChangeActions[_eventKeys[node]]!;
+        return _handleChangeActions[_eventKeys[node]] as Func<Task>;
     }
 
     /// <summary>

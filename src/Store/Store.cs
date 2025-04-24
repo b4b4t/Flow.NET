@@ -152,8 +152,12 @@ public class Store : IStore, IStoreManager, IDisposable
     /// <param name="node">Node name</param>
     protected virtual async Task OnHandleChangeNode(string node)
     {
-        Func<Task> handleChangeFunc = _storeSubscriber.GetNodeHandleChange(node);
-        await handleChangeFunc();
+        Func<Task>? handleChangeFunc = _storeSubscriber.GetNodeHandleChange(node);
+
+        if (handleChangeFunc is not null)
+        {
+            await handleChangeFunc();
+        }
     }
 }
 
@@ -312,7 +316,11 @@ public class Store<TStore> : IStore, IStoreManager<TStore>, IDisposable where TS
     /// <param name="node">Node name</param>
     protected virtual async Task OnHandleChangeNode(string node)
     {
-        Func<Task> handleChangeFunc = _storeSubscriber.GetNodeHandleChange(node);
-        await handleChangeFunc();
+        Func<Task>? handleChangeFunc = _storeSubscriber.GetNodeHandleChange(node);
+
+        if (handleChangeFunc is not null)
+        {
+            await handleChangeFunc();
+        }
     }
 }
